@@ -33,7 +33,7 @@ The KF algorithm goes through the following steps, given by the KF equations in 
 - In reality, the sensor measurement has uncertainty, and this is introduced in *R*, the measurement noise covariance matrix
 - K is the Kalman Filter gain, which combines the uncertainty of the prediction P' and uncertainty of measurement R in equations (14) and (15)
 - In equation (16), if the measurement uncertainty of the sensor R is high relative to prediction uncertainty P', more weight is given to the prediction x', and vice versa.
-- An updated location, *x*, and updated prediction covariance matrix, *p*, are updated.
+- An updated location, *x*, and updated prediction covariance matrix, *P*, are updated.
 
 The KF algorithm will receive another sensor measurement after a time period dt, and another "predict" and "update" is done. This continues as a loop.
 
@@ -41,7 +41,7 @@ The KF algorithm will receive another sensor measurement after a time period dt,
 
 ### 3. Types of Kalman Filters
 
-This section will discuss 3 different types of filters, namely:
+This section will discuss the differences between 3 different types of filters, namely:
 - Kalman Filter (KF)
 - Extended Kalman Filter (EKF)
 - Unscented Kalman Filter (UKF)
@@ -53,8 +53,8 @@ However, when it comes to non-linear systems, either a EKF or UKF will need to b
 #### A. Extended Kalman Filter (EKF)
 
 There are 4 differences between the KF and the EKF equations, which are:
-- #1. Measurement Update: H matrix replaced by Jacobian matrix Hj when calculating S, K and P
-- #2. Measurement Update: To calculate y in equation (13), h(x') will be used instead of Hx'
+- #1. Measurement Update: H matrix replaced by Jacobian matrix Hj when calculating S, K and P in equations (14) and (15)
+- #2. Measurement Update: To calculate y in equation (13), h(x') (described below) will be used instead of Hx'
 - #3. Prediction: F matrix replaced by Jacobian matrix Fj
 - #4. Prediction: To calculate x' in equation (11), prediction update function f will be used instead of Fx
 
@@ -66,7 +66,7 @@ Radar measurements are in polar coordinates as follows:
 
 Once they are mapped into Cartesian coordinates, they become non-linear. This non-linear transformation causes a Gaussian distribution to turn into a non-Gaussian distribution, and the standard KF equations can no longer be applied. Hence, changes #1 and #2 above are applied to the standard KF equations for this project.
 
-Change #1: For the radar update step, there is no H matrix that can map the state vector x into polar coordinates. The mapping needs to be done manually to convert from Cartesian to polar coordinates, as shown in h(x’) below. Hence for radar, y = z – Hx’ becomes y = z – h(x’) instead.
+Change #1: For the radar update step, there is no H matrix that can map the state vector x into polar coordinates. The mapping needs to be done manually to convert from Cartesian to polar coordinates, as shown in h(x’) below. Hence for radar, y = z – Hx’ in equation (13) becomes y = z – h(x’) instead.
 
 <img src='https://github.com/leeping-ng/Udacity-CarND-Extended-Kalman-Filter/blob/master/writeup_images/h%20function.JPG' width=300>
 
@@ -74,7 +74,7 @@ Change #2: Using Taylor series expansion, a linear approximation of h(x’) is u
 
 <img src='https://github.com/leeping-ng/Udacity-CarND-Extended-Kalman-Filter/blob/master/writeup_images/Jacobian%20Matrix%20Hj.JPG' width=500>
 
-As for changes #3 and #4 to predict motion, in this project, a simple, linear Constant Velocity (CV) model is used. In reality, the bicycle may turn or accelerate, and to model this more accurately, the following models can be used:
+In this project, a simple, linear Constant Velocity (CV) model is used, hence changes #3 and #4 for non-linear motion prediction are not applied. In reality, the bicycle may turn or accelerate, and to model this more accurately, the following models can be used:
 - constant turn rate and velocity magnitude model (CTRV)
 - constant turn rate and acceleration (CTRA)
 - constant steering angle and velocity (CSAV)
@@ -93,20 +93,33 @@ The image below shows the simulator results of this project's EKF. In the image 
 
 <img src='https://github.com/leeping-ng/Udacity-CarND-Extended-Kalman-Filter/blob/master/writeup_images/RMSE%20Simulator.JPG' width=600>
 
+The following sections summarise the codes in the src folder of this repository. Some skeleton code was already provided by Udacity, and I filled in the remainder of the missing code for this project.
+
 #### Main.cpp
 
-Main.cpp reads in the data from the simulator,  calls a function to run the Kalman filter, and calls a function to calculate RMSE
-- creating an instance of the FusionEKF class
-- Receiving the measurement data calling the ProcessMeasurement() function. ProcessMeasurement() is responsible for the initialization of the Kalman filter as well as calling the prediction and update steps of the Kalman filter. 
-
-The rest of main.cpp will output the following results to the simulator:
--	estimation position
--	calculated RMSE
+- Creates an instance of the FusionEKF class
+- Reads in the data from the simulator
+- Calls the ProcessMeasurement() function, which is responsible for the initialization of the Kalman filter as well as calling the prediction and update steps of the Kalman filter
+- Calls the CalculateRMSE() to calculate RMSE
+- Outputs the EKF estimated position and calculated RMSE to the simulator
 
 #### FusionEKF.cpp
 
--	initializes the filter, calls the predict function, calls the update function
--	FusionEKF.cpp has a variable called ekf_, which is an instance of a KalmanFilter class. The ekf_ will hold the matrix and vector values. You will also use the ekf_ instance to call the predict and update equations.
+Contains the constructor which initialises the *R* and *H* matrices.
+
+Defines the ProcessMeasurement() function of the which:
+-	Initializes the filter with *x*, *F* and *P* (if required) 
+- Calls the predict function
+- Calls the appropriate update function, depending if the data received is from LiDAR or radar
+- Updates the variable called ekf_, which is an instance of a KalmanFilter class, and hold the matrix and vector values such as *x*, *F*, *P* and *R*
 
 #### kalman_filter.cpp
-- defines the predict function, the update function for lidar, and the update function for radar
+
+- Defines the Predict() function using standard KF equations
+- Defines the Update() function for LiDAR measurements using standard KF equations
+- Defines the UpdateEKF() function for radar measurements with modifications to the KF equations
+
+#### tools.cpp
+
+- Defines the CalculateRMSE() function to calculate RMSE from the estimations and ground truth
+- Defines the CalculateJacobian() function to calculate the Jacobian matrix Hj
