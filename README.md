@@ -89,7 +89,7 @@ For the UKF, instead of linearising about one operating point, a few sample poin
 
 ### 4. Project Code
 
-The image below shows the simulator results of this project's EKF. In the image below, LiDAR measurements are red circles, radar measurements are blue circles with an arrow pointing in the direction of the observed angle, and estimation markers from the EKF are green triangles. Simulated LiDAR and radar data are provided to the C++ script, and the script feeds back to the simulator the measured estimation marker and Root Mean Square Error (RMSE) values.
+The image below shows the simulator results of this project's EKF. In the image below, LiDAR measurements are red circles, radar measurements are blue circles with an arrow pointing in the direction of the observed angle, and estimation markers from the EKF are green triangles. Simulated LiDAR and radar data are provided to the C++ script, and the script feeds back to the simulator the measured estimation marker, and Root Mean Square Error (RMSE) when compared with ground truth values.
 
 <img src='https://github.com/leeping-ng/Udacity-CarND-Extended-Kalman-Filter/blob/master/writeup_images/RMSE%20Simulator.JPG' width=600>
 
@@ -107,11 +107,11 @@ The following sections summarise the codes in the src folder of this repository.
 
 Contains the constructor which initialises the *R* and *H* matrices.
 
-Defines the ProcessMeasurement() function of the which:
--	Initializes the filter with *x*, *F* and *P* (if required) 
+Defines the ProcessMeasurement() function which:
+-	Initializes the filter (if required) with *x*, *F* and *P*  
 - Calls the predict function
 - Calls the appropriate update function, depending if the data received is from LiDAR or radar
-- Updates the variable called ekf_, which is an instance of a KalmanFilter class, and hold the matrix and vector values such as *x*, *F*, *P* and *R*
+- Updates the variable called ekf_, which is an instance of a KalmanFilter class, and holds the matrix and vector values such as *x*, *F*, *P* and *R*
 
 #### kalman_filter.cpp
 
